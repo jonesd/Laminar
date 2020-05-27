@@ -168,6 +168,14 @@ public class ClientConnection implements Closeable, INetworkManagerBackgroundCal
 		return _externalWaitForMessageSetup((nonce) -> ClientMessage.createTopic(nonce, topic));
 	}
 
+	public ClientResult sendCreateProgrammableTopic(TopicName topic, byte[] code, byte[] arguments) {
+		Assert.assertTrue(Thread.currentThread() != _internalThread);
+		if (topic.string.isEmpty()) {
+			throw new IllegalArgumentException("Cannot create empty topic");
+		}
+		return _externalWaitForMessageSetup((nonce) -> ClientMessage.createProgrammableTopic(nonce, topic, code, arguments));
+	}
+
 	public ClientResult sendDestroyTopic(TopicName topic) {
 		Assert.assertTrue(Thread.currentThread() != _internalThread);
 		if (topic.string.isEmpty()) {

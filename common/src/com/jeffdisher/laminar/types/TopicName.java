@@ -73,10 +73,6 @@ public final class TopicName {
 		Assert.assertTrue(safeBytes.length == this.string.length());
 	}
 
-	public byte[] copyRawBytes() {
-		return this.string.getBytes(StandardCharsets.US_ASCII);
-	}
-
 	/**
 	 * @return The size, in bytes, of this instance, when serialized.
 	 */

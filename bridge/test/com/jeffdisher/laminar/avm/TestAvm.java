@@ -1,10 +1,10 @@
 package com.jeffdisher.laminar.avm;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.List;
 import java.util.UUID;
 
-import org.aion.avm.userlib.CodeAndArguments;
 import org.aion.avm.utilities.JarBuilder;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,8 +15,15 @@ import com.jeffdisher.laminar.types.event.EventRecordPayload_Put;
 
 
 public class TestAvm {
+	private static final String TEST_JAR_LOCATION = "/tmp/nothing.jar";
+
 	@Test
 	public void testStartStop() throws Throwable {
+		try (RandomAccessFile file = new RandomAccessFile(TEST_JAR_LOCATION, "rw")) {
+			byte[] jar = _getClassInJar(DoNothing.class);
+			file.write(jar);
+		}
+		// We just write out this JAR for testing later on (since integration can't use this AVM helper.
 		AvmBridge bridge = new AvmBridge();
 		bridge.start();
 		bridge.shutdown();
@@ -36,11 +43,10 @@ public class TestAvm {
 		long clientNonce = 1L;
 		
 		TopicName topic = TopicName.fromString("test");
-		CodeAndArguments args = new CodeAndArguments(code, arguments);
 		AvmBridge bridge = new AvmBridge();
 		bridge.start();
 		
-		List<EventRecord> records = bridge.runCreate(termNumber, globalOffset, initialLocalOffset, clientId, clientNonce, topic, args);
+		List<EventRecord> records = bridge.runCreate(termNumber, globalOffset, initialLocalOffset, clientId, clientNonce, topic, code, arguments);
 		Assert.assertEquals(1, records.size());
 		Assert.assertEquals(0, ((EventRecordPayload_Put)records.get(0).payload).value[0]);
 		
@@ -61,12 +67,11 @@ public class TestAvm {
 		long clientNonce = 1L;
 		
 		TopicName topic = TopicName.fromString("test");
-		CodeAndArguments args = new CodeAndArguments(code, arguments);
 		byte[] value = new byte[] {1,2,3};
 		AvmBridge bridge = new AvmBridge();
 		bridge.start();
 		
-		List<EventRecord> records = bridge.runCreate(termNumber, globalOffset, initialLocalOffset, clientId, clientNonce, topic, args);
+		List<EventRecord> records = bridge.runCreate(termNumber, globalOffset, initialLocalOffset, clientId, clientNonce, topic, code, arguments);
 		Assert.assertEquals(1, records.size());
 		Assert.assertEquals(0, ((EventRecordPayload_Put)records.get(0).payload).value[0]);
 		globalOffset += 1;

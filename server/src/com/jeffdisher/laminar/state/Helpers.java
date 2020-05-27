@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.jeffdisher.laminar.types.ClusterConfig;
 import com.jeffdisher.laminar.types.message.ClientMessage;
 import com.jeffdisher.laminar.types.message.ClientMessagePayload_Delete;
+import com.jeffdisher.laminar.types.message.ClientMessagePayload_Deployment;
 import com.jeffdisher.laminar.types.message.ClientMessagePayload_Put;
 import com.jeffdisher.laminar.types.message.ClientMessagePayload_Topic;
 import com.jeffdisher.laminar.types.message.ClientMessagePayload_UpdateConfig;
@@ -34,8 +35,8 @@ public class Helpers {
 			Assert.unimplemented("Invalid message type");
 			break;
 		case CREATE_TOPIC: {
-			ClientMessagePayload_Topic payload = (ClientMessagePayload_Topic)message.payload;
-			converted = MutationRecord.createTopic(termNumber, mutationOffsetToAssign, payload.topic, clientId, message.nonce);
+			ClientMessagePayload_Deployment payload = (ClientMessagePayload_Deployment)message.payload;
+			converted = MutationRecord.createTopic(termNumber, mutationOffsetToAssign, payload.topic, clientId, message.nonce, payload.code, payload.arguments);
 		}
 			break;
 		case DESTROY_TOPIC: {

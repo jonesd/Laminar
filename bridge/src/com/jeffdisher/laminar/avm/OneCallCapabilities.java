@@ -6,6 +6,7 @@ import org.aion.avm.core.IExternalCapabilities;
 import org.aion.types.AionAddress;
 import org.aion.types.InternalTransaction;
 
+import com.jeffdisher.laminar.types.TopicName;
 import com.jeffdisher.laminar.utils.Assert;
 
 
@@ -13,11 +14,18 @@ import com.jeffdisher.laminar.utils.Assert;
  * Laminar is not a blockchain so none of the hashing or meta-transaction support is implemented.
  * The only thing we support is the creation of new "contract" addresses but we expose those as just a serialized
  * version of the topic name.
- * Currently, we squirrel this information away in the transaction nonce, but this is only temporary.
- * TODO:  Update this once we change this interface in the AVM to allow extra context to be passed around since nonce
- * should actually be the nonce, not a hidden piece of data.
+ * Currently, we need to set the topic name in this, explicitly, before running a create, since we have no other way to
+ * plumb the data in.
+ * TODO:  Update this once we change this interface in the AVM to allow extra context to be passed around since this
+ * approach requires more knowledge in the caller and means multiple topics can't be created concurrently.
  */
-public class TopicInNonceCapabilities implements IExternalCapabilities {
+public class OneCallCapabilities implements IExternalCapabilities {
+	private TopicName _currentTopic;
+
+	public void setCurrentTopic(TopicName topicName) {
+		_currentTopic = topicName;
+	}
+
 	@Override
 	public boolean verifyEdDSA(byte[] arg0, byte[] arg1, byte[] arg2) {
 		throw Assert.unreachable("Crypto not supported");
@@ -32,8 +40,7 @@ public class TopicInNonceCapabilities implements IExternalCapabilities {
 	}
 	@Override
 	public AionAddress generateContractAddress(AionAddress deployerAddress, BigInteger nonce) {
-		byte[] topicName = nonce.toByteArray();
-		return LaminarAvmTranscoder.addressFromTopicName(topicName);
+		return LaminarAvmTranscoder.addressFromTopicName(_currentTopic);
 	}
 	@Override
 	public InternalTransaction decodeSerializedTransaction(byte[] transactionPayload, AionAddress executor, long energyPrice, long energyLimit) {

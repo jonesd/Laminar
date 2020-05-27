@@ -2,16 +2,16 @@ package com.jeffdisher.laminar.bridge;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import com.jeffdisher.laminar.avm.AvmBridge;
 import com.jeffdisher.laminar.types.CommitInfo;
 import com.jeffdisher.laminar.types.TopicName;
 import com.jeffdisher.laminar.types.event.EventRecord;
 import com.jeffdisher.laminar.types.mutation.MutationRecord;
+import com.jeffdisher.laminar.types.mutation.MutationRecordPayload_CodeAndArguments;
 import com.jeffdisher.laminar.types.mutation.MutationRecordPayload_Delete;
 import com.jeffdisher.laminar.types.mutation.MutationRecordPayload_Put;
 import com.jeffdisher.laminar.utils.Assert;
@@ -23,18 +23,21 @@ import com.jeffdisher.laminar.utils.Assert;
  * programmable), and invoking the AVM when applicable.
  */
 public class MutationExecutor {
+	private final AvmBridge _bridge;
 	// Note that we need to describe active topics and next event by topic separately since topic event offsets don't reset when a topic is recreated.
-	private final Set<TopicName> _activeTopics;
+	private final Map<TopicName, TopicData> _activeTopics;
 	private final Map<TopicName, Long> _nextEventOffsetByTopic;
 
 	public MutationExecutor() {
+		_bridge = new AvmBridge();
+		_bridge.start();
 		// Global offsets are 1-indexed so the first one is 1L.
-		_activeTopics = new HashSet<>();
+		_activeTopics = new HashMap<>();
 		_nextEventOffsetByTopic = new HashMap<>();
 	}
 
 	public void stop() {
-		// This is just here as a placeholder for lifecycle operations.
+		_bridge.shutdown();
 	}
 
 	public ExecutionResult execute(MutationRecord mutation) {
@@ -49,19 +52,32 @@ public class MutationExecutor {
 			throw Assert.unimplemented("Invalid message type");
 		case CREATE_TOPIC: {
 			// We want to create the topic but should fail with Effect.INVALID if it is already there.
-			if (_activeTopics.contains(mutation.topic)) {
+				if (_activeTopics.containsKey(mutation.topic)) {
 				result = new ExecutionResult(CommitInfo.Effect.INVALID, Collections.emptyList());
 			} else {
-				// 1-indexed.
-				_activeTopics.add(mutation.topic);
-				EventRecord eventToReturn = EventRecord.createTopic(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce);
-				result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.singletonList(eventToReturn));
+				// See if there is any code.
+				MutationRecordPayload_CodeAndArguments payload = (MutationRecordPayload_CodeAndArguments)mutation.payload;
+				TopicData data = new TopicData();
+				List<EventRecord> events;
+				if (payload.code.length > 0) {
+					// Deploy this.
+					long initialLocalOffset = _nextEventOffsetByTopic.getOrDefault(mutation.topic, 1L);
+					events = _bridge.runCreate(mutation.termNumber, mutation.globalOffset, initialLocalOffset, mutation.clientId, mutation.clientNonce, mutation.topic, payload.code, payload.arguments);
+					// TODO: Extract the transformed code
+					data.transformedCode = payload.code;
+				} else {
+					// This is a normal topic so no special action.
+					data.transformedCode = new byte[0];
+					events = Collections.singletonList(EventRecord.createTopic(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce));
+				}
+				_activeTopics.put(mutation.topic, data);
+				result = new ExecutionResult(CommitInfo.Effect.VALID, events);
 			}
 		}
 			break;
 		case DESTROY_TOPIC: {
 			// We want to destroy the topic but should fail with Effect.ERROR if it doesn't exist.
-			if (_activeTopics.contains(mutation.topic)) {
+			if (_activeTopics.containsKey(mutation.topic)) {
 				_activeTopics.remove(mutation.topic);
 				EventRecord eventToReturn = EventRecord.destroyTopic(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce);
 				result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.singletonList(eventToReturn));
@@ -72,10 +88,17 @@ public class MutationExecutor {
 			break;
 		case PUT: {
 			// This is VALID if the topic exists but ERROR, if not.
-			if (_activeTopics.contains(mutation.topic)) {
+			TopicData data = _activeTopics.get(mutation.topic);
+			if (null != data) {
+				List<EventRecord> events;
 				MutationRecordPayload_Put payload = (MutationRecordPayload_Put)mutation.payload;
-				EventRecord eventToReturn = EventRecord.put(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.key, payload.value);
-				result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.singletonList(eventToReturn));
+				// This exists so check if it is programmatic.
+				if (data.transformedCode.length > 0) {
+					events = _bridge.runPut(mutation.termNumber, mutation.globalOffset, _nextEventOffsetByTopic.get(mutation.topic), mutation.clientId, mutation.clientNonce, mutation.topic, payload.key, payload.value);
+				} else {
+					events = Collections.singletonList(EventRecord.put(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.key, payload.value));
+				}
+				result = new ExecutionResult(CommitInfo.Effect.VALID, events);
 			} else {
 				result = new ExecutionResult(CommitInfo.Effect.ERROR, Collections.emptyList());
 			}
@@ -83,14 +106,20 @@ public class MutationExecutor {
 			break;
 		case DELETE: {
 			// This is VALID if the topic exists but ERROR, if not.
-			if (_activeTopics.contains(mutation.topic)) {
+			TopicData data = _activeTopics.get(mutation.topic);
+			if (null != data) {
+				List<EventRecord> events;
 				MutationRecordPayload_Delete payload = (MutationRecordPayload_Delete)mutation.payload;
-				EventRecord eventToReturn = EventRecord.delete(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.key);
-				result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.singletonList(eventToReturn));
+				// This exists so check if it is programmatic.
+				if (data.transformedCode.length > 0) {
+					events = _bridge.runDelete(mutation.termNumber, mutation.globalOffset, _nextEventOffsetByTopic.get(mutation.topic), mutation.clientId, mutation.clientNonce, mutation.topic, payload.key);
+				} else {
+					events = Collections.singletonList(EventRecord.delete(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.key));
+				}
+				result = new ExecutionResult(CommitInfo.Effect.VALID, events);
 			} else {
 				result = new ExecutionResult(CommitInfo.Effect.ERROR, Collections.emptyList());
 			}
-			
 		}
 			break;
 		case UPDATE_CONFIG: {
@@ -100,7 +129,7 @@ public class MutationExecutor {
 			break;
 		case STUTTER: {
 			// This is VALID if the topic exists but ERROR, if not.
-			if (_activeTopics.contains(mutation.topic)) {
+			if (_activeTopics.containsKey(mutation.topic)) {
 				// Stutter is a special-case as it produces 2 of the same PUT events.
 				MutationRecordPayload_Put payload = (MutationRecordPayload_Put)mutation.payload;
 				List<EventRecord> events = new LinkedList<>();
@@ -135,5 +164,11 @@ public class MutationExecutor {
 			this.effect = effect;
 			this.events = events;
 		}
+	}
+
+
+	private static class TopicData {
+		public byte[] transformedCode;
+		public byte[] objectGraph;
 	}
 }

@@ -17,30 +17,27 @@ public class LaminarAvmTranscoder {
 	private static long ENERGY_LIMIT = 1_000_000L;
 	private static long ENERGY_PRICE = 1L;
 
-	public static Transaction createTopic(UUID clientId, TopicName topicName, byte[] codeAndArgs) {
+	public static Transaction createTopic(UUID clientId, long clientNonce, TopicName topicName, byte[] codeAndArgs) {
 		AionAddress sender = _addressFromUuid(clientId);
 		byte[] transactionHash = new byte[0];
-		// Temporarily, we hide the topic name in the nonce.
-		BigInteger senderNonce = new BigInteger(topicName.copyRawBytes());
+		BigInteger senderNonce = BigInteger.valueOf(clientNonce);
 		return Transaction.contractCreateTransaction(sender, transactionHash, senderNonce, VALUE, codeAndArgs, ENERGY_LIMIT, ENERGY_PRICE);
 	}
 
-	public static Transaction put(UUID clientId, TopicName topicName, byte[] key, byte[] value) {
+	public static Transaction put(UUID clientId, long clientNonce, TopicName topicName, byte[] key, byte[] value) {
 		AionAddress sender = _addressFromUuid(clientId);
-		AionAddress destination = _addressFromTopicName(topicName.copyRawBytes());
+		AionAddress destination = _addressFromTopicName(topicName);
 		byte[] transactionHash = new byte[0];
-		// Temporarily, we hide the topic name in the nonce.
-		BigInteger senderNonce = new BigInteger(topicName.copyRawBytes());
+		BigInteger senderNonce = BigInteger.valueOf(clientNonce);
 		// Temporarily, we only provide key.
 		return Transaction.contractCallTransaction(sender, destination, transactionHash, senderNonce, VALUE, key, ENERGY_LIMIT, ENERGY_PRICE);
 	}
 
-	public static Transaction delete(UUID clientId, TopicName topicName, byte[] key) {
+	public static Transaction delete(UUID clientId, long clientNonce, TopicName topicName, byte[] key) {
 		AionAddress sender = _addressFromUuid(clientId);
-		AionAddress destination = _addressFromTopicName(topicName.copyRawBytes());
+		AionAddress destination = _addressFromTopicName(topicName);
 		byte[] transactionHash = new byte[0];
-		// Temporarily, we hide the topic name in the nonce.
-		BigInteger senderNonce = new BigInteger(topicName.copyRawBytes());
+		BigInteger senderNonce = BigInteger.valueOf(clientNonce);
 		// Temporarily, we only provide key.
 		return Transaction.contractCallTransaction(sender, destination, transactionHash, senderNonce, VALUE, key, ENERGY_LIMIT, ENERGY_PRICE);
 	}
@@ -49,7 +46,7 @@ public class LaminarAvmTranscoder {
 		Assert.assertTrue(result.getResult().transactionStatus.isSuccess());
 	}
 
-	public static AionAddress addressFromTopicName(byte[] topicName) {
+	public static AionAddress addressFromTopicName(TopicName topicName) {
 		return _addressFromTopicName(topicName);
 	}
 
@@ -65,10 +62,11 @@ public class LaminarAvmTranscoder {
 		return new AionAddress(raw);
 	}
 
-	private static AionAddress _addressFromTopicName(byte[] topicName) {
-		Assert.assertTrue(topicName.length <= AionAddress.LENGTH);
-		byte[] addressContainer = new byte[AionAddress.LENGTH];
-		System.arraycopy(topicName, 0, addressContainer, 0, topicName.length);
-		return new AionAddress(addressContainer);
+	private static AionAddress _addressFromTopicName(TopicName topicName) {
+		// We currently use the TopicName as the address so make sure that it fits.
+		Assert.assertTrue(topicName.serializedSize() <= AionAddress.LENGTH);
+		ByteBuffer addressContainer = ByteBuffer.allocate(AionAddress.LENGTH);
+		topicName.serializeInto(addressContainer);
+		return new AionAddress(addressContainer.array());
 	}
 }

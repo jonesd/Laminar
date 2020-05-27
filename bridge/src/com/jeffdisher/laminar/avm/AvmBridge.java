@@ -17,12 +17,12 @@ import com.jeffdisher.laminar.utils.Assert;
 
 
 public class AvmBridge {
-	private final TopicInNonceCapabilities _capabilities;
+	private final OneCallCapabilities _capabilities;
 	private final AvmImpl _avm;
 	private final LaminarExternalStateAdapter _kernel;
 
 	public AvmBridge() {
-		_capabilities = new TopicInNonceCapabilities();
+		_capabilities = new OneCallCapabilities();
 		AvmConfiguration config = new AvmConfiguration();
 		_avm = CommonAvmFactory.buildAvmInstanceForConfiguration(_capabilities, config);
 		_kernel = new LaminarExternalStateAdapter();
@@ -32,12 +32,14 @@ public class AvmBridge {
 		// The AVM factory helper we are using returns a pre-started instance.
 	}
 
-	public List<EventRecord> runCreate(long termNumber, long globalOffset, long initialLocalOffset, UUID clientId, long clientNonce, TopicName topicName, CodeAndArguments codeAndArgs) {
+	public List<EventRecord> runCreate(long termNumber, long globalOffset, long initialLocalOffset, UUID clientId, long clientNonce, TopicName topicName, byte[] code, byte[] arguments) {
+		CodeAndArguments codeAndArgs = new CodeAndArguments(code, arguments);
 		Transaction[] transactions = new Transaction[] {
-				LaminarAvmTranscoder.createTopic(clientId, topicName, codeAndArgs.encodeToBytes())
+				LaminarAvmTranscoder.createTopic(clientId, clientNonce, topicName, codeAndArgs.encodeToBytes())
 		};
 		ExecutionType executionType = null;
 		long commonMainchainBlockNumber = 1L;
+		_capabilities.setCurrentTopic(topicName);
 		FutureResult[] results = _avm.run(_kernel, transactions, executionType, commonMainchainBlockNumber);
 		Assert.assertTrue(transactions.length == results.length);
 		LaminarAvmTranscoder.decodeFuture(results[0]);
@@ -46,10 +48,11 @@ public class AvmBridge {
 
 	public List<EventRecord> runPut(long termNumber, long globalOffset, long initialLocalOffset, UUID clientId, long clientNonce, TopicName topicName, byte[] key, byte[] value) {
 		Transaction[] transactions = new Transaction[] {
-				LaminarAvmTranscoder.put(clientId, topicName, key, value)
+				LaminarAvmTranscoder.put(clientId, clientNonce, topicName, key, value)
 		};
 		ExecutionType executionType = null;
 		long commonMainchainBlockNumber = 1L;
+		_capabilities.setCurrentTopic(topicName);
 		FutureResult[] results = _avm.run(_kernel, transactions, executionType, commonMainchainBlockNumber);
 		Assert.assertTrue(transactions.length == results.length);
 		LaminarAvmTranscoder.decodeFuture(results[0]);
@@ -58,10 +61,11 @@ public class AvmBridge {
 
 	public List<EventRecord> runDelete(long termNumber, long globalOffset, long initialLocalOffset, UUID clientId, long clientNonce, TopicName topicName, byte[] key) {
 		Transaction[] transactions = new Transaction[] {
-				LaminarAvmTranscoder.delete(clientId, topicName, key)
+				LaminarAvmTranscoder.delete(clientId, clientNonce, topicName, key)
 		};
 		ExecutionType executionType = null;
 		long commonMainchainBlockNumber = 1L;
+		_capabilities.setCurrentTopic(topicName);
 		FutureResult[] results = _avm.run(_kernel, transactions, executionType, commonMainchainBlockNumber);
 		Assert.assertTrue(transactions.length == results.length);
 		LaminarAvmTranscoder.decodeFuture(results[0]);

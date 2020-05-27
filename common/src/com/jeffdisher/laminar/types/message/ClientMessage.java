@@ -94,7 +94,16 @@ public class ClientMessage {
 	 * @return A new ClientMessage instance.
 	 */
 	public static ClientMessage createTopic(long nonce, TopicName topic) {
-		return new ClientMessage(ClientMessageType.CREATE_TOPIC, nonce, ClientMessagePayload_Topic.create(topic));
+		return new ClientMessage(ClientMessageType.CREATE_TOPIC, nonce, ClientMessagePayload_Deployment.create(topic, new byte[0], new byte[0]));
+	}
+
+	/**
+	 * Creates a message to create a new topic on the cluster.
+	 * 
+	 * @return A new ClientMessage instance.
+	 */
+	public static ClientMessage createProgrammableTopic(long nonce, TopicName topic, byte[] code, byte[] arguments) {
+		return new ClientMessage(ClientMessageType.CREATE_TOPIC, nonce, ClientMessagePayload_Deployment.create(topic, code, arguments));
 	}
 
 	/**
@@ -215,7 +224,7 @@ public class ClientMessage {
 			payload = ClientMessagePayload_Empty.deserialize(buffer);
 			break;
 		case CREATE_TOPIC:
-			payload = ClientMessagePayload_Topic.deserialize(buffer);
+			payload = ClientMessagePayload_Deployment.deserialize(buffer);
 			break;
 		case DESTROY_TOPIC:
 			payload = ClientMessagePayload_Topic.deserialize(buffer);

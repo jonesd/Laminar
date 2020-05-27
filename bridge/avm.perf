@@ -1,0 +1,239 @@
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 220 ms
+    [junit] 	Time per message: 2200 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 1589 ms
+    [junit] 	Time per message: 1589 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 11244 ms
+    [junit] 	Time per message: 1124 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 589 ms
+    [junit] 	Time per message: 1963 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 4257 ms
+    [junit] 	Time per message: 1419 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 36769 ms
+    [junit] 	Time per message: 1225 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 903 ms
+    [junit] 	Time per message: 1806 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 6648 ms
+    [junit] 	Time per message: 1329 us
+    [junit] PERF:
+    [junit] 	Node count: 1
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 61969 ms
+    [junit] 	Time per message: 1239 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 611 ms
+    [junit] 	Time per message: 6110 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 3855 ms
+    [junit] 	Time per message: 3855 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 24865 ms
+    [junit] 	Time per message: 2486 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 1590 ms
+    [junit] 	Time per message: 5300 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 9403 ms
+    [junit] 	Time per message: 3134 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 64301 ms
+    [junit] 	Time per message: 2143 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 2359 ms
+    [junit] 	Time per message: 4718 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 13879 ms
+    [junit] 	Time per message: 2775 us
+    [junit] PERF:
+    [junit] 	Node count: 3
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 104815 ms
+    [junit] 	Time per message: 2096 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 886 ms
+    [junit] 	Time per message: 8860 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 5342 ms
+    [junit] 	Time per message: 5342 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 32494 ms
+    [junit] 	Time per message: 3249 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 2456 ms
+    [junit] 	Time per message: 8186 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 12477 ms
+    [junit] 	Time per message: 4159 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 82445 ms
+    [junit] 	Time per message: 2748 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 3468 ms
+    [junit] 	Time per message: 6936 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 18613 ms
+    [junit] 	Time per message: 3722 us
+    [junit] PERF:
+    [junit] 	Node count: 5
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 131425 ms
+    [junit] 	Time per message: 2628 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 1249 ms
+    [junit] 	Time per message: 12490 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 7432 ms
+    [junit] 	Time per message: 7432 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 1
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 44875 ms
+    [junit] 	Time per message: 4487 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 3495 ms
+    [junit] 	Time per message: 11650 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 16145 ms
+    [junit] 	Time per message: 5381 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 3
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 105674 ms
+    [junit] 	Time per message: 3522 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 100
+    [junit] 	Total time: 4811 ms
+    [junit] 	Time per message: 9622 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 1000
+    [junit] 	Total time: 23666 ms
+    [junit] 	Time per message: 4733 us
+    [junit] PERF:
+    [junit] 	Node count: 7
+    [junit] 	Client count: 5
+    [junit] 	Messages per client: 10000
+    [junit] 	Total time: 171498 ms
+    [junit] 	Time per message: 3429 us
+    [junit] CSV OUTPUT
+    [junit] Test run with 100 messages per client
+    [junit] ,1 clients,3 clients,5 clients
+    [junit] 1 nodes,2200,1963,1806
+    [junit] 3 nodes,6110,5300,4718
+    [junit] 5 nodes,8860,8186,6936
+    [junit] 7 nodes,12490,11650,9622
+    [junit] 
+    [junit] Test run with 1000 messages per client
+    [junit] ,1 clients,3 clients,5 clients
+    [junit] 1 nodes,1589,1419,1329
+    [junit] 3 nodes,3855,3134,2775
+    [junit] 5 nodes,5342,4159,3722
+    [junit] 7 nodes,7432,5381,4733
+    [junit] 
+    [junit] Test run with 10000 messages per client
+    [junit] ,1 clients,3 clients,5 clients
+    [junit] 1 nodes,1124,1225,1239
+    [junit] 3 nodes,2486,2143,2096
+    [junit] 5 nodes,3249,2748,2628
+    [junit] 7 nodes,4487,3522,3429
+    [junit] 
+
