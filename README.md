@@ -2,6 +2,8 @@
 
 Experimental programmable event store.  See the wiki for more details of [what and why this is](https://github.com/jmdisher/Laminar/wiki/The-What-and-Why-of-Laminar).
 
+![Laminar CI](https://github.com/jonesd/Laminar/workflows/Laminar%20CI/badge.svg)
+
 ## How to build
 
 The project doesn't yet have any examples but it can be built and tested using the top-level default `ant` target:
