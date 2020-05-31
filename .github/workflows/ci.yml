@@ -2,6 +2,9 @@ name: Laminar CI
 
 on: [push]
 
+env:
+  WRAPPER_VERBOSE: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
