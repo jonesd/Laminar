@@ -32,7 +32,6 @@ public class TestConfigBuilder {
 	 * Then creates a normal client to post a normal message to the cluster and verifies that listeners attached to each
 	 * node see the event.
 	 */
-	@Ignore("Hangs on GitHub CI")
 	@Test
 	public void test2NodeCluster() throws Throwable {
 		TopicName topic = TopicName.fromString("test");
