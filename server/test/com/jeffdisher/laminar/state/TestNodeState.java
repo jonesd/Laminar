@@ -18,7 +18,7 @@ import com.jeffdisher.laminar.types.TopicName;
 import com.jeffdisher.laminar.types.event.EventRecord;
 import com.jeffdisher.laminar.types.message.ClientMessage;
 import com.jeffdisher.laminar.types.mutation.MutationRecord;
-import com.jeffdisher.laminar.types.mutation.MutationRecordPayload_Put;
+import com.jeffdisher.laminar.types.payload.Payload_KeyPut;
 
 
 /**
@@ -52,7 +52,7 @@ public class TestNodeState {
 		
 		// Register the topic and say it was committed.
 		F<CommittedMutationRecord> preMutation = test.diskManager.get_commitMutation();
-		long mutationNumber = runner.run((snapshot) -> test.nodeState.mainHandleValidClientMessage(UUID.randomUUID(), ClientMessage.createTopic(1L, topic)));
+		long mutationNumber = runner.run((snapshot) -> test.nodeState.mainHandleValidClientMessage(UUID.randomUUID(), ClientMessage.createTopic(1L, topic, new byte[0], new byte[0])));
 		Assert.assertEquals(1L, mutationNumber);
 		runner.runVoid((snapshot) -> test.nodeState.mainMutationWasCommitted(preMutation.get()));
 		
@@ -90,7 +90,7 @@ public class TestNodeState {
 		ConfigEntry upstream = new ConfigEntry(UUID.randomUUID(), new InetSocketAddress(3), new InetSocketAddress(4));
 		MutationRecord record1 = MutationRecord.put(1L, 1L, topic, UUID.randomUUID(), 1, new byte[0], new byte[] {1});
 		MutationRecord record2 = MutationRecord.put(2L, 2L, topic, UUID.randomUUID(), 1, new byte[0], new byte[] {2});
-		MutationRecord record1_fix = MutationRecord.put(2L, 1L, record1.topic, record1.clientId, record1.clientNonce, ((MutationRecordPayload_Put)record1.payload).key, ((MutationRecordPayload_Put)record1.payload).value);
+		MutationRecord record1_fix = MutationRecord.put(2L, 1L, record1.topic, record1.clientId, record1.clientNonce, ((Payload_KeyPut)record1.payload).key, ((Payload_KeyPut)record1.payload).value);
 		
 		// Send the initial message.
 		F<Long> client_mainEnterFollowerState = test.clientManager.get_mainEnterFollowerState();

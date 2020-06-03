@@ -27,8 +27,8 @@ import com.jeffdisher.laminar.types.event.EventRecord;
 import com.jeffdisher.laminar.types.message.ClientMessage;
 import com.jeffdisher.laminar.types.message.ClientMessageType;
 import com.jeffdisher.laminar.types.mutation.MutationRecord;
-import com.jeffdisher.laminar.types.mutation.MutationRecordPayload_Config;
 import com.jeffdisher.laminar.types.mutation.MutationRecordType;
+import com.jeffdisher.laminar.types.payload.Payload_ConfigChange;
 import com.jeffdisher.laminar.utils.Assert;
 import com.jeffdisher.laminar.utils.UninterruptibleQueue;
 
@@ -234,6 +234,7 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 
 	@Override
 	public void mainForceLeader() {
+		System.out.println("CANDIDATE(forced): " + (_currentTermNumber + 1));
 		_mainStartElection(_currentTermNumber + 1);
 	}
 	// </IClientManagerCallbacks>
@@ -341,6 +342,7 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 			} else if (newTermNumber > _currentTermNumber) {
 				// Even if we don't want to vote for someone, the fact that an election started means we need to participate.
 				// Otherwise, it is possible for this rogue server to never sync back up with the cluster.
+				System.out.println("CANDIDATE(stale peer request): " + newTermNumber);
 				_mainStartElection(newTermNumber);
 			}
 		}
@@ -363,6 +365,7 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 	@Override
 	public void mainUpstreamMessageDidTimeout() {
 		Assert.assertTrue(Thread.currentThread() == _mainThread);
+		System.out.println("CANDIDATE(leader timeout): " + (_currentTermNumber + 1));
 		_mainStartElection(_currentTermNumber + 1);
 	}
 	// </IClusterManagerCallbacks>
@@ -450,24 +453,24 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 		switch (mutation.type) {
 		case INVALID:
 			throw Assert.unimplemented("Invalid message type");
-		case CREATE_TOPIC: {
+		case TOPIC_CREATE: {
 			// No state change on RECEIVE of this message type.
 		}
 			break;
-		case DESTROY_TOPIC: {
+		case TOPIC_DESTROY: {
 			// No state change on RECEIVE of this message type.
 		}
 			break;
-		case PUT: {
+		case KEY_PUT: {
 			// No state change on RECEIVE of this message type.
 		}
 			break;
-		case DELETE: {
+		case KEY_DELETE: {
 			// No state change on RECEIVE of this message type.
 		}
 			break;
-		case UPDATE_CONFIG: {
-			ClusterConfig newConfig = ((MutationRecordPayload_Config)mutation.payload).config;
+		case CONFIG_CHANGE: {
+			ClusterConfig newConfig = ((Payload_ConfigChange)mutation.payload).config;
 			
 			// Notes about handling a new config:
 			// -we now enter (or compound) joint consensus, until this config commits on a majority of servers
@@ -559,6 +562,9 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 	private void _rebuildDownstreamUnionAfterConfigChange() {
 		HashMap<UUID, DownstreamPeerSyncState> copy = new HashMap<>(_unionOfDownstreamNodes);
 		_unionOfDownstreamNodes.clear();
+		System.out.println("Config(rebuild): Config has " + _currentConfig.config.entries.length + " entries, " + _configsPendingCommit.size() + " pending configs");
+		// "self" is always in the union of nodes, even if not part of this config.
+		_unionOfDownstreamNodes.put(_self.nodeUuid, _selfState);
 		for (ConfigEntry entry : _currentConfig.config.entries) {
 			_unionOfDownstreamNodes.put(entry.nodeUuid, copy.get(entry.nodeUuid));
 		}
@@ -671,7 +677,7 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 		while (null != removed) {
 			_selfState.lastMutationOffsetReceived -= 1;
 			// Only CONFIG_UPDATE results in a change to our own state so revert that change if this is what we removed.
-			if (MutationRecordType.UPDATE_CONFIG == removed.type) {
+			if (MutationRecordType.CONFIG_CHANGE == removed.type) {
 				SyncProgress reverted = _configsPendingCommit.remove(removed.globalOffset);
 				Assert.assertTrue(null != reverted);
 				// We just rebuild the downstream union now that this has been removed and it will disconnect anything stale.
@@ -685,6 +691,7 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 		_currentState = RaftState.FOLLOWER;
 		_clusterLeader = peer;
 		_currentTermNumber = termNumber;
+		System.out.println("FOLLOWER(" + peer.nodeUuid + "): " + termNumber);
 		StateSnapshot snapshot = new StateSnapshot(_currentConfig.config, _lastCommittedMutationOffset, _selfState.lastMutationOffsetReceived, _currentTermNumber);
 		_clientManager.mainEnterFollowerState(_clusterLeader, snapshot);
 		_clusterManager.mainEnterFollowerState();
@@ -739,6 +746,7 @@ public class NodeState implements IClientManagerCallbacks, IClusterManagerCallba
 		if (isElected) {
 			// We won the election so enter the leader state.
 			_currentState = RaftState.LEADER;
+			System.out.println("LEADER: " + _currentTermNumber);
 			StateSnapshot snapshot = new StateSnapshot(_currentConfig.config, _lastCommittedMutationOffset, _selfState.lastMutationOffsetReceived, _currentTermNumber);
 			_clientManager.mainEnterLeaderState(snapshot);
 			_clusterManager.mainEnterLeaderState(snapshot);
