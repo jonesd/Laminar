@@ -12,8 +12,9 @@ import com.jeffdisher.laminar.types.CommitInfo;
 import com.jeffdisher.laminar.types.TopicName;
 import com.jeffdisher.laminar.types.event.EventRecord;
 import com.jeffdisher.laminar.types.mutation.MutationRecord;
-import com.jeffdisher.laminar.types.mutation.MutationRecordPayload_Delete;
-import com.jeffdisher.laminar.types.mutation.MutationRecordPayload_Put;
+import com.jeffdisher.laminar.types.payload.Payload_TopicCreate;
+import com.jeffdisher.laminar.types.payload.Payload_KeyDelete;
+import com.jeffdisher.laminar.types.payload.Payload_KeyPut;
 import com.jeffdisher.laminar.utils.Assert;
 
 
@@ -47,19 +48,20 @@ public class MutationExecutor {
 		switch (mutation.type) {
 		case INVALID:
 			throw Assert.unimplemented("Invalid message type");
-		case CREATE_TOPIC: {
+		case TOPIC_CREATE: {
 			// We want to create the topic but should fail with Effect.INVALID if it is already there.
 			if (_activeTopics.contains(mutation.topic)) {
 				result = new ExecutionResult(CommitInfo.Effect.INVALID, Collections.emptyList());
 			} else {
 				// 1-indexed.
 				_activeTopics.add(mutation.topic);
-				EventRecord eventToReturn = EventRecord.createTopic(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce);
+				Payload_TopicCreate payload = (Payload_TopicCreate)mutation.payload;
+				EventRecord eventToReturn = EventRecord.createTopic(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.code, payload.arguments);
 				result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.singletonList(eventToReturn));
 			}
 		}
 			break;
-		case DESTROY_TOPIC: {
+		case TOPIC_DESTROY: {
 			// We want to destroy the topic but should fail with Effect.ERROR if it doesn't exist.
 			if (_activeTopics.contains(mutation.topic)) {
 				_activeTopics.remove(mutation.topic);
@@ -70,10 +72,10 @@ public class MutationExecutor {
 			}
 		}
 			break;
-		case PUT: {
+		case KEY_PUT: {
 			// This is VALID if the topic exists but ERROR, if not.
 			if (_activeTopics.contains(mutation.topic)) {
-				MutationRecordPayload_Put payload = (MutationRecordPayload_Put)mutation.payload;
+				Payload_KeyPut payload = (Payload_KeyPut)mutation.payload;
 				EventRecord eventToReturn = EventRecord.put(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.key, payload.value);
 				result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.singletonList(eventToReturn));
 			} else {
@@ -81,10 +83,10 @@ public class MutationExecutor {
 			}
 		}
 			break;
-		case DELETE: {
+		case KEY_DELETE: {
 			// This is VALID if the topic exists but ERROR, if not.
 			if (_activeTopics.contains(mutation.topic)) {
-				MutationRecordPayload_Delete payload = (MutationRecordPayload_Delete)mutation.payload;
+				Payload_KeyDelete payload = (Payload_KeyDelete)mutation.payload;
 				EventRecord eventToReturn = EventRecord.delete(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.key);
 				result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.singletonList(eventToReturn));
 			} else {
@@ -93,7 +95,7 @@ public class MutationExecutor {
 			
 		}
 			break;
-		case UPDATE_CONFIG: {
+		case CONFIG_CHANGE: {
 			// We always just apply configs.
 			result = new ExecutionResult(CommitInfo.Effect.VALID, Collections.emptyList());
 		}
@@ -102,7 +104,7 @@ public class MutationExecutor {
 			// This is VALID if the topic exists but ERROR, if not.
 			if (_activeTopics.contains(mutation.topic)) {
 				// Stutter is a special-case as it produces 2 of the same PUT events.
-				MutationRecordPayload_Put payload = (MutationRecordPayload_Put)mutation.payload;
+				Payload_KeyPut payload = (Payload_KeyPut)mutation.payload;
 				List<EventRecord> events = new LinkedList<>();
 				EventRecord eventToReturn1 = EventRecord.put(mutation.termNumber, mutation.globalOffset, offsetToPropose, mutation.clientId, mutation.clientNonce, payload.key, payload.value);
 				events.add(eventToReturn1);

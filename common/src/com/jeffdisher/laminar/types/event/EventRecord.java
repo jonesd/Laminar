@@ -4,6 +4,12 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import com.jeffdisher.laminar.types.ClusterConfig;
+import com.jeffdisher.laminar.types.payload.IPayload;
+import com.jeffdisher.laminar.types.payload.Payload_ConfigChange;
+import com.jeffdisher.laminar.types.payload.Payload_TopicCreate;
+import com.jeffdisher.laminar.types.payload.Payload_KeyDelete;
+import com.jeffdisher.laminar.types.payload.Payload_Empty;
+import com.jeffdisher.laminar.types.payload.Payload_KeyPut;
 import com.jeffdisher.laminar.utils.Assert;
 
 
@@ -14,14 +20,16 @@ import com.jeffdisher.laminar.utils.Assert;
  * serialization/deserialization logic.
  */
 public class EventRecord {
-	public static EventRecord createTopic(long termNumber, long globalOffset, long localOffset, UUID clientId, long clientNonce) {
+	public static EventRecord createTopic(long termNumber, long globalOffset, long localOffset, UUID clientId, long clientNonce, byte[] code, byte[] arguments) {
 		// The offsets must be positive.
 		Assert.assertTrue(termNumber > 0L);
 		Assert.assertTrue(globalOffset > 0L);
 		Assert.assertTrue(localOffset > 0L);
 		Assert.assertTrue(null != clientId);
 		Assert.assertTrue(clientNonce >= 0L);
-		return new EventRecord(EventRecordType.CREATE_TOPIC, termNumber, globalOffset, localOffset, clientId, clientNonce, EventRecordPayload_Empty.create());
+		Assert.assertTrue(null != code);
+		Assert.assertTrue(null != arguments);
+		return new EventRecord(EventRecordType.TOPIC_CREATE, termNumber, globalOffset, localOffset, clientId, clientNonce, Payload_TopicCreate.create(code, arguments));
 	}
 
 	public static EventRecord destroyTopic(long termNumber, long globalOffset, long localOffset, UUID clientId, long clientNonce) {
@@ -31,7 +39,7 @@ public class EventRecord {
 		Assert.assertTrue(localOffset > 0L);
 		Assert.assertTrue(null != clientId);
 		Assert.assertTrue(clientNonce >= 0L);
-		return new EventRecord(EventRecordType.DESTROY_TOPIC, termNumber, globalOffset, localOffset, clientId, clientNonce, EventRecordPayload_Empty.create());
+		return new EventRecord(EventRecordType.TOPIC_DESTROY, termNumber, globalOffset, localOffset, clientId, clientNonce, Payload_Empty.create());
 	}
 
 	public static EventRecord put(long termNumber, long globalOffset, long localOffset, UUID clientId, long clientNonce, byte[] key, byte[] value) {
@@ -43,7 +51,7 @@ public class EventRecord {
 		Assert.assertTrue(clientNonce >= 0L);
 		Assert.assertTrue(null != key);
 		Assert.assertTrue(null != value);
-		return new EventRecord(EventRecordType.PUT, termNumber, globalOffset, localOffset, clientId, clientNonce, EventRecordPayload_Put.create(key, value));
+		return new EventRecord(EventRecordType.KEY_PUT, termNumber, globalOffset, localOffset, clientId, clientNonce, Payload_KeyPut.create(key, value));
 	}
 
 	public static EventRecord delete(long termNumber, long globalOffset, long localOffset, UUID clientId, long clientNonce, byte[] key) {
@@ -54,7 +62,7 @@ public class EventRecord {
 		Assert.assertTrue(null != clientId);
 		Assert.assertTrue(clientNonce >= 0L);
 		Assert.assertTrue(null != key);
-		return new EventRecord(EventRecordType.DELETE, termNumber, globalOffset, localOffset, clientId, clientNonce, EventRecordPayload_Delete.create(key));
+		return new EventRecord(EventRecordType.KEY_DELETE, termNumber, globalOffset, localOffset, clientId, clientNonce, Payload_KeyDelete.create(key));
 	}
 
 	/**
@@ -66,7 +74,7 @@ public class EventRecord {
 	 * @return A new EventRecord instance for this special-case.
 	 */
 	public static EventRecord synthesizeRecordForConfig(ClusterConfig config) {
-		return new EventRecord(EventRecordType.CONFIG_CHANGE, -1L, -1L, -1L, new UUID(0L, 0L), -1L, EventRecordPayload_Config.create(config));
+		return new EventRecord(EventRecordType.CONFIG_CHANGE, -1L, -1L, -1L, new UUID(0L, 0L), -1L, Payload_ConfigChange.create(config));
 	}
 
 	/**
@@ -88,24 +96,24 @@ public class EventRecord {
 		long localOffset = wrapper.getLong();
 		UUID clientId = new UUID(wrapper.getLong(), wrapper.getLong());
 		long clientNonce = wrapper.getLong();
-		IEventRecordPayload payload;
+		IPayload payload;
 		switch (type) {
 		case INVALID:
 			throw Assert.unimplemented("Handle invalid deserialization");
-		case CREATE_TOPIC:
-			payload = EventRecordPayload_Empty.deserialize(wrapper);
+		case TOPIC_CREATE:
+			payload = Payload_TopicCreate.deserialize(wrapper);
 			break;
-		case DESTROY_TOPIC:
-			payload = EventRecordPayload_Empty.deserialize(wrapper);
+		case TOPIC_DESTROY:
+			payload = Payload_Empty.deserialize(wrapper);
 			break;
-		case PUT:
-			payload = EventRecordPayload_Put.deserialize(wrapper);
+		case KEY_PUT:
+			payload = Payload_KeyPut.deserialize(wrapper);
 			break;
-		case DELETE:
-			payload = EventRecordPayload_Delete.deserialize(wrapper);
+		case KEY_DELETE:
+			payload = Payload_KeyDelete.deserialize(wrapper);
 			break;
 		case CONFIG_CHANGE:
-			payload = EventRecordPayload_Config.deserialize(wrapper);
+			payload = Payload_ConfigChange.deserialize(wrapper);
 			break;
 		default:
 			throw Assert.unreachable("Unmatched deserialization type");
@@ -120,9 +128,9 @@ public class EventRecord {
 	public final long localOffset;
 	public final UUID clientId;
 	public final long clientNonce;
-	public final IEventRecordPayload payload;
+	public final IPayload payload;
 	
-	private EventRecord(EventRecordType type, long termNumber, long globalOffset, long localOffset, UUID clientId, long clientNonce, IEventRecordPayload payload) {
+	private EventRecord(EventRecordType type, long termNumber, long globalOffset, long localOffset, UUID clientId, long clientNonce, IPayload payload) {
 		this.type = type;
 		this.termNumber = termNumber;
 		this.globalOffset = globalOffset;
